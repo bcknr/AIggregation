@@ -7,18 +7,24 @@ testing with image 1920x1157
 needed for script 
 - cv2
     $ pip install opencv-python opencv-python-headless
+- Pillow == extract image dimensions
+- math == to find common factor
 """
 
-
+#import modules
 import cv2
+from PIL import Image
 
-path_to_img = "input/test_files/tile_test.jpg"
-img_h = 1920
-img_w = 1157
+path_to_img = "input/test_files/tile_test_nests.jpg"
+
+img_pil = Image.open(path_to_img) 
+img_h = img_pil.height 
+img_w = img_pil.width 
+
 img = cv2.imread(path_to_img)
 img_h, img_w, _ = img.shape
-split_width = 400
-split_height = 400
+split_width = 608
+split_height = 608
 
 
 def start_points(size, split_size, overlap=0):
@@ -39,11 +45,11 @@ def start_points(size, split_size, overlap=0):
 
 
 #adjust the overlap percent 
-X_points = start_points(img_w, split_width, 0.5)
-Y_points = start_points(img_h, split_height, 0.5)
+X_points = start_points(img_w, split_width, 0)
+Y_points = start_points(img_h, split_height, 0)
 
 count = 0
-name = 'input/test_files/split/splitted'
+name = 'input/test_files/split/split'
 frmt = 'jpeg'
 
 for i in Y_points:
