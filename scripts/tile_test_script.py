@@ -5,7 +5,6 @@ code adapted from https://github.com/Devyanshu/image-split-with-overlap
 currently it will take all jpgs in a folder and split them all into 608x608 images
 
 """
-
 #import modules
 import cv2
 import glob
@@ -19,9 +18,11 @@ split_height = 608
 # set overlap between images (value from 0 to 1)
 overlap_amount = 0
 
-# set image folder
+# set input image folder
 path_to_img = "input/test_files/*.jpg"
 
+#set output folder
+output_path = "input/test_files/split"
 
 
 
@@ -55,7 +56,7 @@ for filename in glob.glob(path_to_img):
     Y_points = start_points(img_h, split_height, overlap_amount)
 
     count = 0
-    name = os.path.join('input/test_files/split/',os.path.basename(filename))
+    name = os.path.join(output_path, os.path.basename(filename))
     frmt = 'jpeg'
 
     for i in Y_points:
