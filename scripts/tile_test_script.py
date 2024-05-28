@@ -1,30 +1,28 @@
 """ test script for tiling images with overlap - messy playground
 
-code taken from https://github.com/Devyanshu/image-split-with-overlap
+code adapted from https://github.com/Devyanshu/image-split-with-overlap
 
-testing with image 1920x1157
+currently it will take all jpgs in a folder and split them all into 608x608 images
 
-needed for script 
-- cv2
-    $ pip install opencv-python opencv-python-headless
-- Pillow == extract image dimensions
-- math == to find common factor
 """
 
 #import modules
 import cv2
+import glob
+import os
 from PIL import Image
 
-path_to_img = "input/test_files/tile_test_nests.jpg"
-
-img_pil = Image.open(path_to_img) 
-img_h = img_pil.height 
-img_w = img_pil.width 
-
-img = cv2.imread(path_to_img)
-img_h, img_w, _ = img.shape
+# set tile dimensions
 split_width = 608
 split_height = 608
+
+# set overlap between images (value from 0 to 1)
+overlap_amount = 0
+
+# set image folder
+path_to_img = "input/test_files/*.jpg"
+
+
 
 
 def start_points(size, split_size, overlap=0):
@@ -44,17 +42,27 @@ def start_points(size, split_size, overlap=0):
     return points
 
 
-#adjust the overlap percent 
-X_points = start_points(img_w, split_width, 0)
-Y_points = start_points(img_h, split_height, 0)
 
-count = 0
-name = 'input/test_files/split/split'
-frmt = 'jpeg'
+for filename in glob.glob(path_to_img):
 
-for i in Y_points:
-    for j in X_points:
-        split = img[i:i+split_height, j:j+split_width]
-        cv2.imwrite('{}_{}.{}'.format(name, count, frmt), split)
-        count += 1
+    img_dim = Image.open(filename)
+    img_h = img_dim.height
+    img_w = img_dim.width
+    img = cv2.imread(filename)
+    img_h, img_w, _ = img.shape
+
+    X_points = start_points(img_w, split_width, overlap_amount)
+    Y_points = start_points(img_h, split_height, overlap_amount)
+
+    count = 0
+    name = os.path.join('input/test_files/split/',os.path.basename(filename))
+    frmt = 'jpeg'
+
+    for i in Y_points:
+        for j in X_points:
+            split = img[i:i+split_height, j:j+split_width]
+            cv2.imwrite('{}_{}.{}'.format(name, count, frmt), split)
+            count += 1
+
+
 
