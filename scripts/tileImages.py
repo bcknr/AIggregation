@@ -24,10 +24,10 @@ split_height = 608
 overlap_amount = 0
 
 # set input image folder
-path_to_img = "input/test_files/*.jpg"
+path_to_img = "input/drone_photos/training/*.jpg"
 
 #set output folder
-output_path = "input/test_files/split"
+output_path = "input/drone_photos/training_split"
 
 
 
