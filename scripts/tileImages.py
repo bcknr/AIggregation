@@ -16,7 +16,7 @@ import glob
 import os
 from PIL import Image
 
-# set tile dimensions
+# set tile dimensions. needs to be multiple of 32
 split_width = 608
 split_height = 608
 
