@@ -1,4 +1,4 @@
 input/test_files
 input/drone_photos
-data
+datasets
 *.pyc
