@@ -1,3 +1,6 @@
 drone_photos
-datasets
+datasets/training_annotated
+datasets/training_merged
+datasets/eastlawn_23april2024
+datasets/drone_ortho
 *.pyc
