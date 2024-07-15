@@ -5,3 +5,5 @@ fiftyone
 
 notebook
 ipywidgets>=8,<9
+
+rasterio
