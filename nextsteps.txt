@@ -1,0 +1,26 @@
+now that we have adjusted our model to ideally work
+WHICH ACTUALLY DO THAT
+
+We can move on to our analysis and visualizations
+goals are:
+    - test images of large ortho
+        - I think we just split/subset and run seperate validation tests on a labeled subset of the ortho
+        - repeat this labeling with an undergrad, Dr (mark), and AI, doing in on a few images
+            - compare time, accuracy
+    - exporting bounding boxes from ortho back into some sort of coordinate based system
+        - TM currently working on this with rasterio - working notebook created
+    - kernal density estimation
+    - nest heatmap
+
+    
+Step 1 for this would be to output bounding boxes into some coordinate form. from there things are easy
+
+- one way we could do this is with good old math... 
+- currently bounding boxes are saved as x and y of top left corner as a percent of pixles (0-1) and then x and y of box as a percent of image pixles (0-1)
+- easier I think would be just put the ortho and bounding boxes into qgis and then georeference using gravestones as ground control points
+    - this can be pretty easily done 
+
+
+
+
+

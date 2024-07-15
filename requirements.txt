@@ -1,3 +1,7 @@
 numpy==1.26.4
 sahi
 fiftyone
+
+
+notebook
+ipywidgets>=8,<9
