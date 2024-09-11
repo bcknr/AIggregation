@@ -7,3 +7,11 @@ notebook
 ipywidgets>=8,<9
 
 rasterio
+
+
+
+
+#for yolo tiling
+pandas
+Pillow
+Shapely
