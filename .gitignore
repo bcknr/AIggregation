@@ -6,4 +6,5 @@ datasets/drone_ortho
 datasets/export_test
 datasets/geo_test
 datasets/tiled_export
+datasets/export_predictions
 *.pyc
