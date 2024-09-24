@@ -7,4 +7,5 @@ datasets/export_test
 datasets/geo_test
 datasets/tiled_export
 datasets/export_predictions
+datasets/groundtruth_testset_detect_only
 *.pyc

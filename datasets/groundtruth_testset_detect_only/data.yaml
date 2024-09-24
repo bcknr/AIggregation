@@ -1,4 +1,4 @@
 names:
   0: nest
-path: ../groundtruth_testset
+path: ../groundtruth_testset_detectonly
 val: ./images/

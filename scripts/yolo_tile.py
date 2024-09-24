@@ -29,7 +29,7 @@ def tiler(imnames, newpath, falsepath, slice_size, ext):
         height = imr.shape[0]
         width = imr.shape[1]
         labname = imname.replace(ext, '.txt')
-        labels = pd.read_csv(labname, sep=' ', names=['class', 'x1', 'y1', 'w', 'h'])
+        labels = pd.read_csv(labname, sep=' ', names=['class', 'x1', 'y1', 'w', 'h', 'conf'])
         
         # we need to rescale coordinates from 0-1 to real image height and width
         labels[['x1', 'w']] = labels[['x1', 'w']] * width
