@@ -11,6 +11,7 @@ modifications:
 - takes images from a yolov5 format fiftyone output looking for images inside args.source/images/val
 - outputs into yolov5 format with associated yaml file
 - keeps confidence rating for each bounding box
+- only keeps files that are in the test set
 
 
 '''
