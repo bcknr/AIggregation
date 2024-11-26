@@ -125,33 +125,49 @@ def tiler(imnames, newpath, falsepath, slice_size, ext):
                     print('Slice without boxes saved')
                     imsaved = True
 
-def splitter(target, target_upfolder, ext, ratio):
-    imnames = glob.glob(f'{target}/*{ext}')
-    names = [name.split('/')[-1] for name in imnames]
+def splitter(target, ext, ratio):
 
-    # split dataset for train and test
+    imnames = glob.glob(f'{target}/images/*{ext}')
+    #names = [name.split('/')[-1] for name in imnames]
 
-    train = []
+    names= [name.split('/')[-1].split('.')[0] for name in imnames]
+
+    # split dataset for nontest and test
+
+    nontest = []
     test = []
+
     for name in names:
         if random.random() > ratio:
-            test.append(os.path.join(target, name))
+            test.append(os.path.join(name + ext))
+            test.append(os.path.join(name + ".txt"))
         else:
-            train.append(os.path.join(target, name))
-    print('train:', len(train))
+            nontest.append(os.path.join(name + ext))
+            nontest.append(os.path.join(name + ".txt"))
+    print('train:', len(nontest))
     print('test:', len(test))
 
-    # we will put test.txt, train.txt in a folder one level higher than images
+    # we will put test.txt, nontest.txt in main folder with yaml
 
     # save train part
-    with open(f'{target_upfolder}/train.txt', 'w') as f:
-        for item in train:
+    with open(f'{target}/nontest.txt', 'w') as f:
+        for item in nontest:
             f.write("%s\n" % item)
 
     # save test part
-    with open(f'{target_upfolder}/test.txt', 'w') as f:
+    with open(f'{target}/test.txt', 'w') as f:
         for item in test:
             f.write("%s\n" % item)
+
+    # now we will delete all images and labels that are not in the test list
+
+    for f in nontest:
+        full_file_path = glob.glob(f'{target}/*/{f}*')
+        for file in full_file_path:
+            os.remove(file)
+
+
+
 
 
 # yaml creation
@@ -170,6 +186,10 @@ def yamlizer(target):
 
 
 
+
+
+
+
 if __name__ == "__main__":
     # Initialize parser
     parser = argparse.ArgumentParser()
@@ -185,6 +205,7 @@ if __name__ == "__main__":
 
     imnames = glob.glob(f'{args.source}/images/val/*{args.ext}')
     labnames = glob.glob(f'{args.source}/labels/val/*.txt')
+
     
     if len(imnames) == 0:
         raise Exception("Source folder should contain some images")
@@ -198,15 +219,11 @@ if __name__ == "__main__":
     elif len(os.listdir(args.target)) > 0:
         raise Exception("Target folder should be empty")
     
-    # classes.names should be located one level higher than images   
-    # this file is not changing, so we will just copy it to a target folder 
     upfolder = os.path.join(args.source, '..' )
     target_upfolder = os.path.join(args.target, '..' )
-    if not os.path.exists(os.path.join(upfolder, 'classes.names')):
-        print('classes.names not found. It should be located one level higher than images')
-    else:
-        copyfile(os.path.join(upfolder, 'classes.names'), os.path.join(target_upfolder, 'classes.names'))
-    
+
+
+
     if args.falsefolder:
         if not os.path.exists(args.falsefolder):
             os.makedirs(args.falsefolder)
@@ -214,7 +231,7 @@ if __name__ == "__main__":
             raise Exception("Folder for tiles without boxes should be empty")
 
     tiler(imnames, args.target, args.falsefolder, args.size, args.ext)
-    splitter(args.target, target_upfolder, args.ext, args.ratio)
+    splitter(args.target, args.ext, args.ratio)
     yamlizer(args.target)
 
 
