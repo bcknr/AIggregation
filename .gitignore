@@ -5,7 +5,6 @@ datasets/eastlawn_23april2024
 datasets/drone_ortho
 datasets/export_test
 datasets/geo_test
-datasets/tiled_export
 datasets/export_predictions
-datasets/groundtruth_testset_detect_only
+datasets/testset
 *.pyc

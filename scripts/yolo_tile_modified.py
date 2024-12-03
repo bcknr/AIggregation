@@ -26,8 +26,7 @@ import glob
 import argparse
 import os
 import random
-from shutil import copyfile
- 
+import random 
 import yaml 
 
 
@@ -129,17 +128,22 @@ def tiler(imnames, newpath, falsepath, slice_size, ext):
 def splitter(target, ext, ratio):
 
     imnames = glob.glob(f'{target}/images/*{ext}')
-    #names = [name.split('/')[-1] for name in imnames]
-
     names= [name.split('/')[-1].split('.')[0] for name in imnames]
+
 
     # split dataset for nontest and test
 
     nontest = []
     test = []
+    fulllist = []
+    test_list = (random.sample(names, k=round(len(names)*ratio)))
+
+    # modify with random
 
     for name in names:
-        if random.random() > ratio:
+        fulllist.append(os.path.join(name + ext))
+        fulllist.append(os.path.join(name + ".txt"))
+        if name in test_list:
             test.append(os.path.join(name + ext))
             test.append(os.path.join(name + ".txt"))
         else:
@@ -148,26 +152,30 @@ def splitter(target, ext, ratio):
     print('train:', len(nontest))
     print('test:', len(test))
 
+
+
     # we will put test.txt, nontest.txt in main folder with yaml
 
-    # save train part
+    # save train part 
     with open(f'{target}/nontest.txt', 'w') as f:
         for item in nontest:
             f.write("%s\n" % item)
 
-    # save test part
-    with open(f'{target}/test.txt', 'w') as f:
-        for item in test:
-            f.write("%s\n" % item)
+    # save test part 
+        with open(f'{target}/test.txt', 'w') as f:
+            for item in test:
+                f.write("%s\n" % item)
 
-    # now we will delete all images and labels that are not in the test list
+    # save full list  
+        with open(f'{target}/full_list.txt', 'w') as f:
+            for item in fulllist:
+                f.write("%s\n" % item)
 
+    # now we will delete all images and labels that are not in the test list file
     for f in nontest:
-        full_file_path = glob.glob(f'{target}/*/{f}*')
-        for file in full_file_path:
-            os.remove(file)
-
-
+            full_file_path = glob.glob(f'{target}/*/{f}*')
+            for file in full_file_path:
+                os.remove(file)
 
 
 
@@ -199,8 +207,8 @@ if __name__ == "__main__":
     parser.add_argument("-target", default="./yolosliced/ts/", help = "Target folder for a new sliced dataset")
     parser.add_argument("-ext", default=".JPG", help = "Image extension in a dataset. Default: .JPG")
     parser.add_argument("-falsefolder", default=None, help = "Folder for tiles without bounding boxes")
-    parser.add_argument("-size", type=int, default=416, help = "Size of a tile. Dafault: 416")
-    parser.add_argument("-ratio", type=float, default=0.8, help = "Train/test split ratio. Dafault: 0.8")
+    parser.add_argument("-size", type=int, default=608, help = "Size of a tile. Dafault: 608")
+    parser.add_argument("-ratio", type=float, default=0.2, help = "Train/test split ratio. Dafault: 0.2")
 
     args = parser.parse_args()
 
