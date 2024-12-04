@@ -152,25 +152,24 @@ def splitter(target, ext, ratio):
     print('test:', len(test))
 
 
-
     # we will put test.txt, nontest.txt in main folder with yaml
 
-    # save train part 
+    # save nontest part 
     with open(f'{target}/nontest.txt', 'w') as f:
         for item in nontest:
             f.write("%s\n" % item)
 
     # save test part 
-        with open(f'{target}/test.txt', 'w') as f:
-            for item in test:
-                f.write("%s\n" % item)
+    with open(f'{target}/test.txt', 'w') as f:
+        for item in test:
+            f.write("%s\n" % item)
 
     # save full list  
-        with open(f'{target}/full_list.txt', 'w') as f:
-            for item in fulllist:
-                f.write("%s\n" % item)
+    with open(f'{target}/full_list.txt', 'w') as f:
+        for item in fulllist:
+            f.write("%s\n" % item)
 
-    # now we will delete all images and labels that are not in the test list file
+    # now we delete all images and labels that are in the nontest list 
     for f in nontest:
             full_file_path = glob.glob(f'{target}/*/{f}*')
             for file in full_file_path:
