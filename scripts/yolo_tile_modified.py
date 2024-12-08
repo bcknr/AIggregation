@@ -188,7 +188,7 @@ def yamlizer(target):
         'path': os.path.join("..", folder),
         'val': "./images/"
             }
-    with open((os.path.join(target,"data.yaml")), 'w') as outfile:
+    with open((os.path.join(target,"dataset.yaml")), 'w') as outfile:
         yaml.dump(data, outfile, default_flow_style=False, sort_keys=False)
 
 

@@ -3,8 +3,7 @@ datasets/training_annotated
 datasets/training_merged
 datasets/eastlawn_23april2024
 datasets/drone_ortho
-datasets/export_test
-datasets/geo_test
 datasets/export_predictions
 datasets/testset
+datasets/geo_outputs/georef_raster.tif
 *.pyc
