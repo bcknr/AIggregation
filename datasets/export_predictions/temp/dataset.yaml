@@ -1,0 +1,4 @@
+names:
+  0: nest
+path: /home/tmueller/github/AIggregation/datasets/export_predictions/temp
+val: ./images/val/
