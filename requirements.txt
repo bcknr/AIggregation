@@ -1,9 +1,17 @@
 numpy==1.26.4
 sahi
-fiftyone
+fiftyone 
 
 
 notebook
 ipywidgets>=8,<9
 
 rasterio
+
+
+
+
+#for yolo tiling
+pandas
+Pillow
+Shapely

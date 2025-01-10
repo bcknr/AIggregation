@@ -2,4 +2,11 @@ drone_photos
 datasets/training*
 datasets/eastlawn_23april2024
 datasets/drone_ortho
+
 *.pyc
+*png
+*jpeg
+*jpg
+*tif
+*xcf
+
