@@ -1,0 +1,307 @@
+# 00000: Nest analysis
+Authors: Tobias G. Mueller, Mark A. Buckner
+Last modified: 11/27/2024
+Contact: __________
+
+**Summary**: Here, we take the point locations of bee nest sites identified 
+through the object detection workflow to evaluate the patterns of nest 
+abundance, density, and clustering.
+
+This script outputs an estimate of the true number of nest
+
+The data used in this script was generated in:
+    `AIggregation/notebooks/export_and_georef.ipynb`
+
+### Load Packages and Data
+
+```{r}
+# Load package
+pkgs <- c("terra", "sf", "spatstat", "ggplot2", "tidyterra",
+          "svglite", "cowplot", "ggspatial", "grid", "gridExtra", "gridtext")
+inst_pkgs <- pkgs[!pkgs %in% installed.packages()]
+for(p in inst_pkgs) install.packages(p)
+# Load all required packages
+sapply(pkgs,require,character=TRUE)
+
+# Read data
+df <- read.csv("./datasets/geo_outputs/georef_centroids.csv")
+r  <- terra::rast("./datasets/geo_outputs/georef_raster.tif") |>
+  terra::rectify()
+```
+
+### Process Ortho and Points
+
+```{r}
+# Color orthomosaic
+r_col  <- r
+terra::RGB(r_col) <- c(1,2,3)
+
+# Reduced resolution reference raster
+r_reduced <- terra::aggregate(r, 25)
+terra::RGB(r_reduced) <- c(1,2,3)
+
+df_sf <- st_as_sf(df, coords = c("x", "y"), crs = 32618)
+df_multi <- sf::st_union(df_sf)
+
+plot(r_col)
+plot(r_reduced)
+```
+
+### Example Analyses
+
+#### Kernel Density
+
+```{r}
+rect <- sf::st_minimum_rotated_rectangle(df_multi) |>
+  sf::st_buffer(0.1)
+win <- as.owin(rect)
+
+nest_ppp <- ppp(x = df$x, y = df$y, window = win)
+sigma <- bw.diggle(nest_ppp)
+
+kde <- density(nest_ppp, sigma)  |>
+  terra::rast()  |>
+  terra::resample(r_reduced) |>
+  terra::mask(r_reduced$georef_raster_1)
+
+plot(kde)
+```
+
+#### Convex Hull
+
+```{r}
+hull <- st_concave_hull(df_multi, ratio = 0.5, allow_holes = TRUE) 
+plot(hull)
+```
+
+#### Point Pattern Analysis
+
+#### Local L Functions
+
+```{r}
+nest_ppp_L <- ppp(x = df$x, y = df$y, window = win)
+L  <- localL(nest_ppp_L)
+plot(L)
+
+# Clustering w/in 1 meter
+L1m <- localL(nest_ppp_L, rvalue=1)
+X1m <- nest_ppp_L %mark% L1m
+Z1m <- Smooth(X1m, sigma=1)  |>
+  terra::rast()  |>
+  terra::resample(r_reduced) |>
+  mask(r_reduced$georef_raster_1)
+
+plot(Z1m)
+
+# Clustering w/in 10 cm
+L10cm <- localL(nest_ppp_L, rvalue=0.1)
+X10cm <- nest_ppp_L %mark% L10cm
+Z10cm <- Smooth(X10cm, sigma=1)  |>
+  terra::rast()  |>
+  terra::resample(r_reduced) |>
+  mask(r_reduced$georef_raster_1)
+
+plot(Z10cm)
+
+```
+
+
+### Figure
+
+```{r}
+pal1 <- c("#143642", "#0F8B8D", "#B4B8A3","#D16666", "#EC9A29")
+```
+
+#### Sub-figure A
+
+Plot points
+
+```{r}
+ggplot() +
+  geom_spatraster_rgb(data = r_reduced, maxcell = 595386,
+                  interpolate = TRUE, alpha = 0.5) +
+  geom_spatvector(data=df_multi)+
+  theme_void() #+
+  #annotation_scale()
+```
+
+#### Sub-figure B
+
+Kernel Density Estimation
+
+```{r}
+fig_kde <- ggplot() +
+  geom_spatraster_rgb(data = r_reduced, maxcell = 595386,
+                  interpolate = TRUE, alpha = 1) +
+  geom_spatraster(data = kde, alpha = 0.8) +                  
+  geom_spatvector(data=df_multi, shape = 4, color = "#000", alpha=0.5,
+                  size=1) +
+  scale_fill_gradientn(colors = pal1, na.value = "transparent") +
+  theme_void()  +
+  annotation_scale() +
+  theme(legend.position = "none")
+
+svglite::svglite("./figs/fig_kde.svg", bg = "transparent",
+                 width = 5, height = 5)
+print(fig_kde, newpage = FALSE)
+dev.off()
+
+# Uniqueness Legend
+legend <- ggplot() +
+  geom_spatraster(data = kde, alpha = 0.8) +
+  scale_fill_gradientn(colors = pal1, na.value = "transparent",
+                       name = "Density") +
+  theme(legend.title = element_text(size = 16,
+                                    angle=-90),
+        legend.text = element_text(size = 14)) +
+  guides(fill = guide_colorbar(title.position = "right",
+                               # title.theme = element_text(angle=-90),
+                               title.hjust = 0.5,
+                               # title.vjust = 3,
+                               barheight = 10,
+                               barwidth = 1,
+                               ticks.linewidth = 0.70,
+                               ticks.colour = "white",
+                               label = TRUE,
+                               label.hjust = -0.7
+  ))
+
+leg <- cowplot::get_legend(legend) 
+
+svglite::svglite("./figs/fig_kde_leg.svg", bg = "white", width = 1, height = 3)
+grid.draw(leg)
+dev.off()
+```
+
+#### Sub-figure C
+
+Local L at 1m and 10 cm
+
+```{r}
+fig_ll1m <- ggplot() +
+  geom_spatraster_rgb(data = r_reduced, maxcell = 595386,
+                  interpolate = TRUE, alpha = 1) +
+  geom_spatraster(data = Z1m, alpha = 0.8) +                  
+  geom_spatvector(data=df_multi, shape = 4, color = "#000", alpha=0.5,
+                  size=1) +
+  scale_fill_gradientn(colors = pal1, na.value = "transparent") +
+  theme_void()  +
+  annotation_scale() +
+  theme(legend.position = "none")
+
+svglite::svglite("./figs/fig_ll1m.svg", bg = "transparent",
+                 width = 5, height = 5)
+print(fig_ll1m, newpage = FALSE)
+dev.off()
+
+# Uniqueness Legend
+legend <- ggplot() +
+  geom_spatraster(data = Z1m, alpha = 0.8) +
+  scale_fill_gradientn(colors = pal1, na.value = "transparent",
+                       name = "Local L (r = 1m)") +
+  theme(legend.title = element_text(size = 16,
+                                    angle=-90),
+        legend.text = element_text(size = 14)) +
+  guides(fill = guide_colorbar(title.position = "right",
+                               # title.theme = element_text(angle=-90),
+                               title.hjust = 0.5,
+                               # title.vjust = 3,
+                               barheight = 10,
+                               barwidth = 1,
+                               ticks.linewidth = 0.70,
+                               ticks.colour = "white",
+                               label = TRUE,
+                               label.hjust = -0.7
+  ))
+
+leg <- cowplot::get_legend(legend) 
+
+svglite::svglite("./figs/fig_ll1m_leg.svg", bg = "white", width = 1, height = 3)
+grid.draw(leg)
+dev.off()
+```
+
+```{r}
+fig_ll10cm <- ggplot() +
+  geom_spatraster_rgb(data = r_reduced, maxcell = 595386,
+                  interpolate = TRUE, alpha = 1) +
+  geom_spatraster(data = Z10cm, alpha = 0.8) +                  
+  geom_spatvector(data=df_multi, shape = 4, color = "#000", alpha=0.5,
+                  size=1) +
+  scale_fill_gradientn(colors = pal1, na.value = "transparent") +
+  theme_void()  +
+  annotation_scale() +
+  theme(legend.position = "none")
+
+svglite::svglite("./figs/fig_ll10cm.svg", bg = "transparent",
+                 width = 5, height = 5)
+print(fig_ll10cm, newpage = FALSE)
+dev.off()
+
+# Uniqueness Legend
+legend <- ggplot() +
+  geom_spatraster(data = Z10cm, alpha = 0.8) +
+  scale_fill_gradientn(colors = pal1, na.value = "transparent",
+                       name = "Local L (r = 0.1m)") +
+  theme(legend.title = element_text(size = 16,
+                                    angle=-90),
+        legend.text = element_text(size = 14)) +
+  guides(fill = guide_colorbar(title.position = "right",
+                               # title.theme = element_text(angle=-90),
+                               title.hjust = 0.5,
+                               # title.vjust = 3,
+                               barheight = 10,
+                               barwidth = 1,
+                               ticks.linewidth = 0.70,
+                               ticks.colour = "white",
+                               label = TRUE,
+                               label.hjust = -0.7
+  ))
+
+leg <- cowplot::get_legend(legend) 
+
+svglite::svglite("./figs/fig_ll10cm_leg.svg", bg = "white", width = 1, height = 3)
+grid.draw(leg)
+dev.off()
+```
+
+#### Sub-figure D?
+
+Local L curve
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+
+L_df <- as.data.frame(L)
+
+L_long <- L_df %>%
+  pivot_longer(
+    cols = -r,
+    names_to = "Point",
+    values_to = "L_value"
+  )
+
+# Compute average for simplified visualization
+L_avg <- L_long %>%
+  group_by(r) %>%
+  summarize(mean_L = mean(L_value, na.rm = TRUE))
+
+ggplot() +
+  geom_line(data = L_long, aes(x = r, y = L_value, group = Point), 
+            color = "gray", alpha = 0.3) +
+  geom_line(data = L_avg, aes(x = r, y = mean_L), 
+            color = "blue", linewidth = 1.2) +
+  theme_minimal() +
+  labs(
+    x = "r (meters)",
+    y = expression(L[loc](r))
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12)
+  )
+```
