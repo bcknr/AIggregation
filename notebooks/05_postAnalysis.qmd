@@ -106,10 +106,22 @@ plot(Z10cm)
 ```
 
 
+#### Nearest neighboor distance
+
+```{r}
+nn <- nndist(nest_ppp)
+nn_Marked <- nest_ppp %mark% nndist(nest_ppp)
+plot(nn_Marked, markscale = 1)
+
+nn_df <- data.frame(x = nn_Marked$x, y = nn_Marked$y, nn = nn_Marked$marks) |>
+  st_as_sf(coords = c("x", "y"), crs = 32618)
+```
+
 ### Figure
 
 ```{r}
 pal1 <- c("#143642", "#0F8B8D", "#B4B8A3","#D16666", "#EC9A29")
+pal2  <- 
 ```
 
 #### Sub-figure A
@@ -274,7 +286,6 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 
-
 L_df <- as.data.frame(L)
 
 L_long <- L_df %>%
@@ -289,19 +300,101 @@ L_avg <- L_long %>%
   group_by(r) %>%
   summarize(mean_L = mean(L_value, na.rm = TRUE))
 
+# Add theoretical line (assuming L(r) = r for CSR)
+theo <- data.frame(
+  r = unique(L_long$r),
+  L_theo = unique(L_long$r)
+)
+
 ggplot() +
   geom_line(data = L_long, aes(x = r, y = L_value, group = Point), 
             color = "gray", alpha = 0.3) +
   geom_line(data = L_avg, aes(x = r, y = mean_L), 
-            color = "blue", linewidth = 1.2) +
+            color = "#143642", linewidth = 1.2) +
+  geom_line(data = theo, aes(x = r, y = L_theo), 
+            color = "#D16666", linetype = "dashed", linewidth = 0.75) +
   theme_minimal() +
   labs(
     x = "r (meters)",
     y = expression(L[loc](r))
   ) +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 16),
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12)
   )
+```
+
+#### Alternative sub-figure C
+
+```{r}
+fig_nn <- ggplot() +
+  geom_spatraster_rgb(data = r_reduced, maxcell = 595386,
+                  interpolate = TRUE, alpha = 1) +               
+  geom_spatvector(aes(size = nn^2, fill = nn), color = "black", 
+                  data = nn_df, shape = 21, alpha = 0.75, stroke = 0.5) +
+  scale_size_continuous(
+    breaks = seq(0.05, 0.6, by = 0.05) ^ 2,
+    limits = c(0.01^2, 0.7^2),
+    range = c(0.01, 10),
+    name = "Size (nn^2)",
+    labels = seq(0.05, 0.6, by = 0.05),
+    guide = guide_legend(override.aes = list(size = seq(0.001, 10, length.out = 12)))
+  ) +
+  scale_fill_gradientn(breaks = seq(0.05, 0.6, by = 0.05),
+                       limits = c(0.01, 0.7),
+                       colors = rev(pal1), na.value = "transparent",
+                       name = "Nearest Neighbor") +
+  theme_void()  +
+  annotation_scale() +
+  theme(
+    legend.position = "none"
+  )
+
+svglite::svglite("./figs/fig_nn.svg", bg = "transparent",
+                 width = 5, height = 5)
+print(fig_nn, newpage = FALSE)
+dev.off()
+
+# Uniqueness Legend
+legend <- ggplot() +
+  geom_spatraster_rgb(data = r_reduced, maxcell = 595386,
+                  interpolate = TRUE, alpha = 1) +               
+  geom_spatvector(aes(size = nn^2, fill = nn), color = "black", 
+                  data = nn_df, shape = 21, alpha = 0.75, stroke = 0.8) +
+  scale_size_continuous(
+    breaks = seq(0.05, 0.6, by = 0.05) ^ 2,
+    limits = c(0.01^2, 0.7^2),
+    range = c(0.01, 10),
+    name = "Size (nn^2)",
+    labels = seq(0.05, 0.6, by = 0.05),
+    guide = guide_legend(override.aes = list(size = seq(0.001, 10, length.out = 12)))
+  ) +
+  scale_fill_gradientn(breaks = seq(0.05, 0.6, by = 0.05),
+                       limits = c(0.01, 0.7),
+                       colors = rev(pal1), na.value = "transparent",
+                       name = "Nearest Neighbor") +
+  theme_void()  +
+  annotation_scale() +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  ) +
+  guides(fill = guide_colorbar(title.position = "right",
+                               # title.theme = element_text(angle=-90),
+                               title.hjust = 0.5,
+                               # title.vjust = 3,
+                               barheight = 10,
+                               barwidth = 1,
+                               ticks.linewidth = 0.70,
+                               ticks.colour = "white",
+                               label = TRUE,
+                               label.hjust = -0.7
+  ))
+
+leg <- cowplot::get_legend(legend) 
+
+svglite::svglite("./figs/fig_nn_leg.svg", bg = "white", width = 3, height = 7)
+grid.draw(leg)
+dev.off()
 ```
