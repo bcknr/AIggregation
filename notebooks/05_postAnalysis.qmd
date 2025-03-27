@@ -65,6 +65,7 @@ kde <- density(nest_ppp, sigma)  |>
   terra::mask(r_reduced$georef_raster_1)
 
 plot(kde)
+writeRaster(kde, "./figs/kde.tif")
 ```
 
 #### Convex Hull
@@ -92,6 +93,7 @@ Z1m <- Smooth(X1m, sigma=1)  |>
   mask(r_reduced$georef_raster_1)
 
 plot(Z1m)
+writeRaster(Z1m, "./figs/ll1m.tif")
 
 # Clustering w/in 10 cm
 L10cm <- localL(nest_ppp_L, rvalue=0.1)
@@ -115,13 +117,14 @@ plot(nn_Marked, markscale = 1)
 
 nn_df <- data.frame(x = nn_Marked$x, y = nn_Marked$y, nn = nn_Marked$marks) |>
   st_as_sf(coords = c("x", "y"), crs = 32618)
+
+sf::st_write(nn_df, "./figs/nndist.gpkg")
 ```
 
 ### Figure
 
 ```{r}
 pal1 <- c("#143642", "#0F8B8D", "#B4B8A3","#D16666", "#EC9A29")
-pal2  <- 
 ```
 
 #### Sub-figure A
@@ -290,38 +293,44 @@ L_df <- as.data.frame(L)
 
 L_long <- L_df %>%
   pivot_longer(
-    cols = -r,
+    cols = -c(r, theo),
     names_to = "Point",
     values_to = "L_value"
   )
+
+# Add L1m values to color lines
+L_long <- L_long %>%
+  mutate(L1m_value = L1m)
 
 # Compute average for simplified visualization
 L_avg <- L_long %>%
   group_by(r) %>%
   summarize(mean_L = mean(L_value, na.rm = TRUE))
 
-# Add theoretical line (assuming L(r) = r for CSR)
-theo <- data.frame(
-  r = unique(L_long$r),
-  L_theo = unique(L_long$r)
-)
+# Add theoretical line (L(r) = r for CSR)
+theo <- data.frame(r = L_df$r, L_theo = L_df$theo)
 
-ggplot() +
-  geom_line(data = L_long, aes(x = r, y = L_value, group = Point), 
-            color = "gray", alpha = 0.3) +
+fig_locl <- ggplot() +
+  geom_line(data = L_long, aes(x = r, y = L_value, group = Point, color = L1m_value), alpha = 0.2) +
   geom_line(data = L_avg, aes(x = r, y = mean_L), 
             color = "#143642", linewidth = 1.2) +
   geom_line(data = theo, aes(x = r, y = L_theo), 
-            color = "#D16666", linetype = "dashed", linewidth = 0.75) +
+            color = "#143642", linetype = "dashed", linewidth = 0.75) +
   theme_minimal() +
   labs(
     x = "r (meters)",
-    y = expression(L[loc](r))
+    y = expression(L[loc](r)),
+    color = expression(L[loc]("1m"))
   ) +
   theme(
     axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12)
-  )
+    axis.text = element_text(size = 12),
+    legend.position = "right"
+  ) +
+  scale_color_gradientn(colors = pal1)
+
+ggsave(filename = "./figs/fig_locl.png", plot = fig_locl, 
+  width = 6, height = 5, dpi = 600, bg = "white")
 ```
 
 #### Alternative sub-figure C
