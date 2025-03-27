@@ -124,56 +124,63 @@ def tiler(imnames, newpath, falsepath, slice_size, ext):
                     print('Slice without boxes saved')
                     imsaved = True
 
-def splitter(target, ext, ratio):
+def splitter(target, ext, ratio, overwrite):
 
-    imnames = glob.glob(f'{target}/images/*{ext}')
-    names= [name.split('/')[-1].split('.')[0] for name in imnames]
+    # check if we want to create a new set of test files 
+    # or create tiles based on an existing list
+    if overwrite == "TRUE":
 
+        # pull image names
+        imnames = glob.glob(f'{target}/images/*{ext}')
+        names= [name.split('/')[-1].split('.')[0] for name in imnames]
 
-    # split dataset for nontest and test
+        # create lists for nontest and test images
+        nontest = []
+        test = []
+        fulllist = []
+        test_list = (random.sample(names, k=round(len(names)*ratio)))
 
-    nontest = []
-    test = []
-    fulllist = []
-    test_list = (random.sample(names, k=round(len(names)*ratio)))
+        # modify with random
+        for name in names:
+            fulllist.append(os.path.join(name + ext))
+            fulllist.append(os.path.join(name + ".txt"))
+            if name in test_list:
+                test.append(os.path.join(name + ext))
+                test.append(os.path.join(name + ".txt"))
+            else:
+                nontest.append(os.path.join(name + ext))
+                nontest.append(os.path.join(name + ".txt"))
+        print('train:', len(nontest))
+        print('test:', len(test))
 
-    # modify with random
+        # we will put test.txt, nontest.txt in main folder with yaml
 
-    for name in names:
-        fulllist.append(os.path.join(name + ext))
-        fulllist.append(os.path.join(name + ".txt"))
-        if name in test_list:
-            test.append(os.path.join(name + ext))
-            test.append(os.path.join(name + ".txt"))
-        else:
-            nontest.append(os.path.join(name + ext))
-            nontest.append(os.path.join(name + ".txt"))
-    print('train:', len(nontest))
-    print('test:', len(test))
+        # write nontest list to txt
+        with open(f'{target}/nontest.txt', 'w') as f:
+            for item in nontest:
+                f.write("%s\n" % item)
 
+        # write test list 
+        with open(f'{target}/test.txt', 'w') as f:
+            for item in test:
+                f.write("%s\n" % item)
 
-    # we will put test.txt, nontest.txt in main folder with yaml
+        # write full list  
+        with open(f'{target}/full_list.txt', 'w') as f:
+            for item in fulllist:
+                f.write("%s\n" % item)
 
-    # save nontest part 
-    with open(f'{target}/nontest.txt', 'w') as f:
-        for item in nontest:
-            f.write("%s\n" % item)
-
-    # save test part 
-    with open(f'{target}/test.txt', 'w') as f:
-        for item in test:
-            f.write("%s\n" % item)
-
-    # save full list  
-    with open(f'{target}/full_list.txt', 'w') as f:
-        for item in fulllist:
-            f.write("%s\n" % item)
+    # if overwrite = FALSE, read list of nontest and delete those images
+    else:
+        with open('./datasets/testset/nontest.txt', 'r') as f:
+            nontest = [line.strip() for line in f]
 
     # now we delete all images and labels that are in the nontest list 
     for f in nontest:
             full_file_path = glob.glob(f'{target}/*/{f}*')
             for file in full_file_path:
                 os.remove(file)
+
 
 
 
@@ -201,12 +208,14 @@ if __name__ == "__main__":
     # Initialize parser
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-source", default="./yolosample/ts/", help = "Source folder with images and labels needed to be tiled")
-    parser.add_argument("-target", default="./yolosliced/ts/", help = "Target folder for a new sliced dataset")
+    parser.add_argument("-source", default="./dataset/export_predictions/", help = "Source folder with images and labels needed to be tiled")
+    parser.add_argument("-target", default="./dataset/testset/", help = "Target folder for a new sliced dataset")
     parser.add_argument("-ext", default=".JPG", help = "Image extension in a dataset. Default: .JPG")
     parser.add_argument("-falsefolder", default=None, help = "Folder for tiles without bounding boxes")
-    parser.add_argument("-size", type=int, default=608, help = "Size of a tile. Dafault: 608")
-    parser.add_argument("-ratio", type=float, default=0.2, help = "Train/test split ratio. Dafault: 0.2")
+    parser.add_argument("-size", type=int, default=608, help = "Size of a tile. Default: 608")
+    parser.add_argument("-ratio", type=float, default=0.2, help = "Train/test split ratio. Default: 0.2")
+    parser.add_argument("-overwrite", default="FALSE", help = "overwrites and creates new training set instead of pulling from existing txt called testlist. default: FALSE")
+
 
     args = parser.parse_args()
 
@@ -229,7 +238,7 @@ if __name__ == "__main__":
     upfolder = os.path.join(args.source, '..' )
     target_upfolder = os.path.join(args.target, '..' )
 
-
+ 
 
     if args.falsefolder:
         if not os.path.exists(args.falsefolder):
@@ -238,7 +247,7 @@ if __name__ == "__main__":
             raise Exception("Folder for tiles without boxes should be empty")
 
     tiler(imnames, args.target, args.falsefolder, args.size, args.ext)
-    splitter(args.target, args.ext, args.ratio)
+    splitter(args.target, args.ext, args.ratio, args.overwrite)
     yamlizer(args.target)
 
 
