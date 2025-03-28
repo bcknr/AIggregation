@@ -7,11 +7,6 @@ https://github.com/slanj/yolo-tiling/blob/main/tile_yolo.py
 
 This should take the large yolo output and tile it, creating seperate smaller images and label files. 
 
-modifications:
-- takes images from a yolov5 format fiftyone output looking for images inside args.source/images/val
-- outputs into yolov5 format with associated yaml file
-- keeps confidence rating for each bounding box
-- only keeps files that are in the test set
 
 
 '''
@@ -29,7 +24,7 @@ import random
 import yaml 
 
 
-def tiler(imnames, newpath, falsepath, slice_size, ext):
+def tiler(imnames, newpath, allimages, slice_size, ext):
 
     for imname in imnames:
         im = Image.open(imname)
@@ -115,17 +110,19 @@ def tiler(imnames, newpath, falsepath, slice_size, ext):
                     print(slice_df)
                     slice_df.to_csv(slice_labels_path, sep=' ', index=False, header=False, float_format='%.6f')
                 
-                if not imsaved and falsepath:
+                if not imsaved and allimages:
                     sliced = imr[i*slice_size:(i+1)*slice_size, j*slice_size:(j+1)*slice_size]
                     sliced_im = Image.fromarray(sliced)
                     filename = imname.split('/')[-1]
-                    slice_path = falsepath + "/" + filename.replace(ext, f'_{i}_{j}{ext}')                
+                    slice_path = newpath + "/images/" + filename.replace(ext, f'_{i}_{j}{ext}')                
                     sliced_im.save(slice_path)
                     print('Slice without boxes saved')
                     imsaved = True
 
 def splitter(target, ext, ratio, overwrite):
 
+
+        
     # check if we want to create a new set of test files 
     # or create tiles based on an existing list
     if overwrite == "TRUE":
@@ -172,7 +169,7 @@ def splitter(target, ext, ratio, overwrite):
 
     # if overwrite = FALSE, read list of nontest and delete those images
     else:
-        with open('./datasets/testset/nontest.txt', 'r') as f:
+        with open(f'{target_upfolder}/nontest.txt', 'r') as f:
             nontest = [line.strip() for line in f]
 
     # now we delete all images and labels that are in the nontest list 
@@ -211,7 +208,7 @@ if __name__ == "__main__":
     parser.add_argument("-source", default="./dataset/export_predictions/", help = "Source folder with images and labels needed to be tiled")
     parser.add_argument("-target", default="./dataset/testset/", help = "Target folder for a new sliced dataset")
     parser.add_argument("-ext", default=".JPG", help = "Image extension in a dataset. Default: .JPG")
-    parser.add_argument("-falsefolder", default=None, help = "Folder for tiles without bounding boxes")
+    parser.add_argument("-all_images", default= "TRUE", help = "Folder for tiles without bounding boxes")
     parser.add_argument("-size", type=int, default=608, help = "Size of a tile. Default: 608")
     parser.add_argument("-ratio", type=float, default=0.2, help = "Train/test split ratio. Default: 0.2")
     parser.add_argument("-overwrite", default="FALSE", help = "overwrites and creates new training set instead of pulling from existing txt called testlist. default: FALSE")
@@ -240,14 +237,7 @@ if __name__ == "__main__":
 
  
 
-    if args.falsefolder:
-        if not os.path.exists(args.falsefolder):
-            os.makedirs(args.falsefolder)
-        elif len(os.listdir(args.falsefolder)) > 0:
-            raise Exception("Folder for tiles without boxes should be empty")
-
-    tiler(imnames, args.target, args.falsefolder, args.size, args.ext)
+    tiler(imnames, args.target, args.all_images, args.size, args.ext)
     splitter(args.target, args.ext, args.ratio, args.overwrite)
     yamlizer(args.target)
-
-
+    
