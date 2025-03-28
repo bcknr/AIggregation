@@ -205,8 +205,8 @@ if __name__ == "__main__":
     # Initialize parser
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-source", default="./dataset/export_predictions/", help = "Source folder with images and labels needed to be tiled")
-    parser.add_argument("-target", default="./dataset/testset/", help = "Target folder for a new sliced dataset")
+    parser.add_argument("-source", default="./datasets/export_predictions/", help = "Source folder with images and labels needed to be tiled")
+    parser.add_argument("-target", default="./datasets/testset/", help = "Target folder for a new sliced dataset")
     parser.add_argument("-ext", default=".JPG", help = "Image extension in a dataset. Default: .JPG")
     parser.add_argument("-all_images", default= "TRUE", help = "Folder for tiles without bounding boxes")
     parser.add_argument("-size", type=int, default=608, help = "Size of a tile. Default: 608")
