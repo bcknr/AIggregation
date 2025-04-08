@@ -168,15 +168,15 @@ def splitter(target, ext, ratio, overwrite):
                 f.write("%s\n" % item)
 
     # if overwrite = FALSE, read list of nontest and delete those images
-    else:
+    if overwrite == "FALSE":
         with open(f'{target_upfolder}/nontest.txt', 'r') as f:
             nontest = [line.strip() for line in f]
 
     # now we delete all images and labels that are in the nontest list 
     for f in nontest:
-            full_file_path = glob.glob(f'{target}/*/{f}*')
-            for file in full_file_path:
-                os.remove(file)
+        full_file_path = glob.glob(f'{target}/*/{f}*')
+        for file in full_file_path:
+            os.remove(file)
 
 
 
@@ -231,9 +231,10 @@ if __name__ == "__main__":
         os.makedirs(os.path.join(args.target,"labels/"))
     elif len(os.listdir(args.target)) > 0:
         raise Exception("Target folder should be empty")
-    
-    upfolder = os.path.join(args.source, '..' )
-    target_upfolder = os.path.join(args.target, '..' )
+
+
+    upfolder = os.path.dirname(args.source) 
+    target_upfolder = os.path.dirname(args.target) 
 
  
 
