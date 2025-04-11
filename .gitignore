@@ -2,6 +2,9 @@ drone_photos
 datasets/training*
 datasets/eastlawn_23april2024
 datasets/drone_ortho
+figs/*svg
+figs/*gpkg
+.Rhistory
 
 *.pyc
 *png
