@@ -1,0 +1,4 @@
+names:
+  0: nest
+path: ../boundingboxes
+val: ./images/
