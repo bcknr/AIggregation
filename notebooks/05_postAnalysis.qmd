@@ -1,6 +1,6 @@
-# 00000: Nest analysis
+# 05: Nest analysis
 Authors: Tobias G. Mueller, Mark A. Buckner
-Last modified: 11/27/2024
+Last modified: 04/11/2025
 Contact: __________
 
 **Summary**: Here, we take the point locations of bee nest sites identified 
@@ -10,7 +10,7 @@ abundance, density, and clustering.
 This script outputs an estimate of the true number of nest
 
 The data used in this script was generated in:
-    `AIggregation/notebooks/export_and_georef.ipynb`
+    `AIggregation/notebooks/04_georeference.ipynb`
 
 ### Load Packages and Data
 
