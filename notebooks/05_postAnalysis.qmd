@@ -68,15 +68,6 @@ plot(kde)
 writeRaster(kde, "./figs/kde.tif")
 ```
 
-#### Convex Hull
-
-```{r}
-# hull <- st_concave_hull(df_multi, ratio = 0.5, allow_holes = TRUE) 
-# plot(hull)
-```
-
-#### Point Pattern Analysis
-
 #### Local L Functions
 
 ```{r}
@@ -108,8 +99,7 @@ writeRaster(Z1m, "./figs/ll10cm.tif", overwrite=TRUE)
 
 ```
 
-
-#### Nearest neighboor distance
+#### Nearest neighbor distance
 
 ```{r}
 nn <- nndist(nest_ppp)
@@ -405,9 +395,4 @@ leg <- cowplot::get_legend(legend)
 svglite::svglite("./figs/fig_nn_leg.svg", bg = "white", width = 3, height = 7)
 grid.draw(leg)
 dev.off()
-```
-
-
-```{r}
-
 ```
